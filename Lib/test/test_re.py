@@ -2170,6 +2170,18 @@ class PatternReprTests(unittest.TestCase):
         self.assertEqual(r[:30], "re.compile('Very long long lon")
         self.assertEqual(r[-16:], ", re.IGNORECASE)")
 
+    def test_flags_repr(self):
+        self.assertEqual(repr(re.I), "re.IGNORECASE")
+        self.assertEqual(repr(re.I|re.S|re.X),
+                         "re.IGNORECASE|re.DOTALL|re.VERBOSE")
+        self.assertEqual(repr(re.I|re.S|re.X|(1<<20)),
+                         "re.IGNORECASE|re.DOTALL|re.VERBOSE|0x100000")
+        self.assertEqual(repr(~re.I), "~re.IGNORECASE")
+        self.assertEqual(repr(~(re.I|re.S|re.X)),
+                         "~(re.IGNORECASE|re.DOTALL|re.VERBOSE)")
+        self.assertEqual(repr(~(re.I|re.S|re.X|(1<<20))),
+                         "~(re.IGNORECASE|re.DOTALL|re.VERBOSE|0x100000)")
+
 
 class ImplementationTest(unittest.TestCase):
     """
@@ -2205,7 +2217,7 @@ class ExternalTests(unittest.TestCase):
 
     def test_re_tests(self):
         're_tests test suite'
-        from test.re_tests import tests, SUCCEED, FAIL, SYNTAX_ERROR
+        from test.re_tests import tests, FAIL, SYNTAX_ERROR
         for t in tests:
             pattern = s = outcome = repl = expected = None
             if len(t) == 5:

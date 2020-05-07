@@ -649,7 +649,7 @@ non-important content
         self.assertEqual(f'2\x203', '2 3')
         self.assertEqual(f'\x203', ' 3')
 
-        with self.assertWarns(SyntaxWarning):  # invalid escape sequence
+        with self.assertWarns(DeprecationWarning):  # invalid escape sequence
             value = eval(r"f'\{6*7}'")
         self.assertEqual(value, '\\42')
         self.assertEqual(f'\\{6*7}', '\\42')
@@ -713,7 +713,7 @@ non-important content
 
         # lambda doesn't work without parens, because the colon
         #  makes the parser think it's a format_spec
-        self.assertAllRaise(SyntaxError, 'unexpected EOF while parsing',
+        self.assertAllRaise(SyntaxError, 'invalid syntax',
                             ["f'{lambda x:x}'",
                              ])
 
@@ -841,8 +841,7 @@ non-important content
         self.assertEqual(f'{f"{y}"*3}', '555')
 
     def test_invalid_string_prefixes(self):
-        self.assertAllRaise(SyntaxError, 'unexpected EOF while parsing',
-                            ["fu''",
+        single_quote_cases = ["fu''",
                              "uf''",
                              "Fu''",
                              "fU''",
@@ -863,8 +862,10 @@ non-important content
                              "bf''",
                              "bF''",
                              "Bf''",
-                             "BF''",
-                             ])
+                             "BF''",]
+        double_quote_cases = [case.replace("'", '"') for case in single_quote_cases]
+        self.assertAllRaise(SyntaxError, 'unexpected EOF while parsing',
+                            single_quote_cases + double_quote_cases)
 
     def test_leading_trailing_spaces(self):
         self.assertEqual(f'{ 3}', '3')
@@ -1149,6 +1150,24 @@ non-important content
         self.assertEqual(f'{C()=!r:*^20}', 'C()=********REPR********')
 
         self.assertRaises(SyntaxError, eval, "f'{C=]'")
+
+        # Make sure leading and following text works.
+        x = 'foo'
+        self.assertEqual(f'X{x=}Y', 'Xx='+repr(x)+'Y')
+
+        # Make sure whitespace around the = works.
+        self.assertEqual(f'X{x  =}Y', 'Xx  ='+repr(x)+'Y')
+        self.assertEqual(f'X{x=  }Y', 'Xx=  '+repr(x)+'Y')
+        self.assertEqual(f'X{x  =  }Y', 'Xx  =  '+repr(x)+'Y')
+
+        # These next lines contains tabs.  Backslash escapes don't
+        # work in f-strings.
+        # patchcheck doesn't like these tabs.  So the only way to test
+        # this will be to dynamically created and exec the f-strings.  But
+        # that's such a hassle I'll save it for another day.  For now, convert
+        # the tabs to spaces just to shut up patchcheck.
+        #self.assertEqual(f'X{x =}Y', 'Xx\t='+repr(x)+'Y')
+        #self.assertEqual(f'X{x =       }Y', 'Xx\t=\t'+repr(x)+'Y')
 
     def test_walrus(self):
         x = 20

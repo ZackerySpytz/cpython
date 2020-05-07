@@ -8,7 +8,8 @@ extern "C" {
 #  error "this header requires Py_BUILD_CORE define"
 #endif
 
-#include "pystate.h"   /* PyInterpreterState */
+/* Forward declaration */
+struct _is;
 
 /* Write the Python traceback into the file 'fd'. For example:
 
@@ -56,7 +57,7 @@ PyAPI_FUNC(void) _Py_DumpTraceback(
 
 PyAPI_FUNC(const char*) _Py_DumpTracebackThreads(
     int fd,
-    PyInterpreterState *interp,
+    struct _is *interp,
     PyThreadState *current_tstate);
 
 /* Write a Unicode object into the file descriptor fd. Encode the string to
@@ -85,6 +86,10 @@ PyAPI_FUNC(void) _Py_DumpHexadecimal(
     int fd,
     unsigned long value,
     Py_ssize_t width);
+
+PyAPI_FUNC(PyObject*) _PyTraceBack_FromFrame(
+    PyObject *tb_next,
+    PyFrameObject *frame);
 
 #ifdef __cplusplus
 }
